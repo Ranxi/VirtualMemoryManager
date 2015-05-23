@@ -4,11 +4,11 @@
 #ifndef DEBUG
 #define DEBUG
 #endif
-#undef DEBUG
+/*#undef DEBUG*/
 
 
 /* 模拟辅存的文件路径 */
-#define AUXILIARY_MEMORY "vmm_auxMem"
+#define AUXILIARY_MEMORY "test.txt"
 
 /* 页面大小（字节）*/
 #define PAGE_SIZE 4
