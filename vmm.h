@@ -9,9 +9,9 @@
 #define PRINT_MEMORY
 //#define MULTIPRO
 /* 模拟辅存的文件路径 */
-#define AUXILIARY_MEMORY "a.txt"		//进程0的辅存空间
-#define AUXILIARY_MEMORY1 "b.txt"		//进程1的辅存空间
-
+#define AUXILIARY_MEMORY "a.txt"		//辅存空间
+/*FIFO FILE*/
+#define FIFO_FILE "fifo"
 /* 页面大小（字节）*/
 #define PAGE_SIZE 4
 
@@ -79,6 +79,7 @@ typedef struct
 	BYTE value; //写请求的值
 } MemoryAccessRequest, *Ptr_MemoryAccessRequest;
 
+#define REQ_DATALEN sizeof(MemoryAccessRequest)
 
 /* 访存错误代码 */
 typedef enum {

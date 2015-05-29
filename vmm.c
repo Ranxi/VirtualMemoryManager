@@ -1,6 +1,16 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <signal.h>
+#include <fcntl.h>
 #include <time.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <signal.h>
 #include "vmm.h"
 
 /* 二级页表 */
@@ -15,7 +25,8 @@ BOOL blockStatus[BLOCK_SUM];
 Ptr_MemoryAccessRequest ptr_memAccReq;
 /*总访存次数 for LRU*/
 long cur_execNo;
-
+/*fifo file*/
+int fifo;
 /*初始化辅存文件*/
 void initFile(){
 	int i;
@@ -142,7 +153,7 @@ void do_response()
 		return;
 	}
 	#endif
-	
+
 	/* 根据特征位决定是否产生缺页中断 */
 	if (!ptr_pageTabIt->filled)
 	{
@@ -511,7 +522,8 @@ void do_input_request()
 void do_print_actMem()
 {
 	int i,j,k;
-	printf("物理块号\t内容\t\n");
+	printf("实存:\n");
+	printf("块号\t内容\t\n");
 	for(i=0,k=0;i<BLOCK_SUM;i++){
 		printf("%d\t",i);
 		for(j=0;j<PAGE_SIZE;j++){
@@ -537,6 +549,7 @@ void do_print_auxMem()
 		do_error(ERROR_FILE_READ_FAILED);
 		exit(1);
 	}
+	printf("辅存:\n");
 	printf("页号\t内容\t\n");
 	for(i=0,k=0;i<PAGE_SUM;i++)
 	{
@@ -586,6 +599,8 @@ int main(int argc, char* argv[])
 {
 	char c;
 	int i;
+	struct stat statbuf;
+	int cnt;
 	initFile();
 	if (!(ptr_auxMem = fopen(AUXILIARY_MEMORY, "r+")))
 	{
@@ -595,33 +610,55 @@ int main(int argc, char* argv[])
 	
 	do_init();
 	do_print_info();
+	if(stat(FIFO_FILE,&statbuf)==0){
+		/* 如果FIFO文件存在,删掉 */
+		if(remove(FIFO_FILE)<0){
+			printf("remove failed!\n");
+			return;
+		}
+	}
+	if(mkfifo(FIFO_FILE,0666)<0){
+		printf("mkfifo failed!\n");
+		return;
+	}
+	if((fifo=open(FIFO_FILE,O_RDONLY|O_NONBLOCK))<0){
+		printf("open fifo failed!\n");
+	}
 	ptr_memAccReq = (Ptr_MemoryAccessRequest) malloc(sizeof(MemoryAccessRequest));
 	/* 在循环中模拟访存请求与处理过程 */
 	while (TRUE)
 	{
-		printf("按H将由手动输入访存请求,按其他键由程序自动生成请求...\n");
+		/*printf("按H将由手动输入访存请求,按其他键由程序自动生成请求...\n");
 		c = getchar();
 		if(c == 'h'|| c == 'H')
 			do_input_request();
 		else
 			do_request();
 		while (c != '\n')
-			c = getchar();
+			c = getchar();*/
+		bzero(ptr_memAccReq,REQ_DATALEN);
+		if(cnt=read(fifo,ptr_memAccReq,REQ_DATALEN)<0){
+			printf("Read file failed!\n");
+			return;
+		}
+
+		c = '\n';
 		do_response();
 		printf("按Y打印页表，按A键打印辅存，按P键打印实存,按其他键不打印...\n");
-		//while(c == '\n')
-			c = getchar();
-		if (c  == 'y' || c == 'Y')
-			do_print_info();
-		else if (c == 'A' || c == 'a')
-		{
-			printf("you print A/a!");
-			do_print_auxMem();
+		
+		while((c = getchar())!='\n'){
+			if (c  == 'y' || c == 'Y')
+				do_print_info();
+			else if (c == 'A' || c == 'a')
+				do_print_auxMem();
+			else if (c == 'P' || c == 'p')
+				do_print_actMem();
+			else{
+				while(c!='\n')
+					c = getchar();
+				break;
+			}
 		}
-		else if (c == 'P' || c == 'p')
-			do_print_actMem();
-		while (c != '\n')
-			c = getchar();
 		printf("按X退出程序，按其他键继续...\n");
 		if ((c = getchar()) == 'x' || c == 'X')
 			break;
@@ -637,3 +674,4 @@ int main(int argc, char* argv[])
 	}
 	return (0);
 }
+
