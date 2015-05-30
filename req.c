@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ipc.h>
 #include <fcntl.h>
 #include "vmm.h"
@@ -68,7 +66,7 @@ void do_input_request()
 		case 0: //读请求
 		{
 			req.reqType = REQUEST_READ;
-			printf("输入产生的请求：\n地址：%lu\t类型：读取\n", req.virAddr);
+			printf("输入产生的请求：\n地址：%lu\t类型：读取\tPID:%u\n", req.virAddr,pid);
 			break;
 		}
 		case 1: //写请求
@@ -78,18 +76,19 @@ void do_input_request()
 			printf("请输入待写入的值:");
 			scanf("%d",&writeValue);
 			req.value = writeValue % 0xFFu;
-			printf("输入产生的请求：\n地址：%lu\t类型：写入\t值：%02X\n", req.virAddr, req.value);
+			printf("输入产生的请求：\n地址：%lu\t类型：写入\t值：%02X\tPID:%u\n", req.virAddr, req.value,pid);
 			break;
 		}
 		case 2:
 		{
 			req.reqType = REQUEST_EXECUTE;
-			printf("输入产生的请求：\n地址：%lu\t类型：执行\n", req.virAddr);
+			printf("输入产生的请求：\n地址：%lu\t类型：执行\tPID:%u\n", req.virAddr,pid);
 			break;
 		}
 		default:
 			req.reqType = REQUEST_READ;
-			printf("请求类型错误，将按照默认类型(读类型)\n");
+			printf("请求类型错误，将按照默认类型(读类型)产生请求!\n");
+			printf("输入产生的请求：\n地址：%lu\t类型：读取\tPID:%u\n", req.virAddr,pid);
 			break;
 	}	
 }
@@ -106,14 +105,18 @@ int main(int argc,char *argv[]){
 	while(TRUE){
 		printf("按H将由手动输入访存请求,按X退出,按其他键由程序自动生成请求...\n");
 		c = getchar();
-		if(c == 'h'|| c == 'H')
+		if(c == 'h'|| c == 'H'){
 			do_input_request();
-		else if(c =='x'|| c == 'X')
+		}
+		else if(c =='x'|| c == 'X'){
 			break;
-		else
+		}
+		else{
 			do_request();
-		while (c != '\n')
+		}
+		while (c != '\n'){
 			c = getchar();
+		}
 		if((fd = open(FIFO_FILE,O_WRONLY))<0){
 			printf("Gen Request open fifo failed!\n");
 		}

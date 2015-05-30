@@ -1,16 +1,11 @@
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+//#include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/wait.h>
+#include <sys/ipc.h>
 #include <string.h>
-#include <signal.h>
 #include <fcntl.h>
 #include <time.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <signal.h>
 #include "vmm.h"
 
 /* 二级页表 */
@@ -235,7 +230,14 @@ void do_page_fault(Ptr_PageTableItem ptr_pageTabIt)
 		}
 	}
 	/* 没有空闲物理块，进行页面替换 */
-	do_LFU(ptr_pageTabIt);
+	printf("请选择页面替换算法(F-LFU,R-LRU):\n");
+	char c = getchar();
+	if(c=='f'||c=='F')
+		do_LFU(ptr_pageTabIt);
+	else
+		do_LRU(ptr_pageTabIt);
+	while(c!='\n')
+		c = getchar();
 }
 
 /* 根据LRU算法进行页面替换,最近最久未使用法 */
@@ -245,7 +247,7 @@ void do_LRU(Ptr_PageTableItem ptr_pageTabIt){
 	min = 0xFFFFFFFF;
 	for(i = 0;i<PAGE_LEVEL1_SIZE; i++){
 		for(j = 0;j<PAGE_LEVEL2_SIZE;j++)
-			if(pageTable[page_i][page_j].filled && pageTable[i][j].execNo < min){
+			if(pageTable[i][j].filled && pageTable[i][j].execNo < min){
 				min = pageTable[i][j].execNo;
 				page_i = i;
 				page_j = j;
@@ -522,10 +524,10 @@ void do_input_request()
 void do_print_actMem()
 {
 	int i,j,k;
-	printf("实存:\n");
-	printf("块号\t内容\t\n");
+	printf("***********************实存***********************\n");
+	printf("\t\t块号\t内容\t\n");
 	for(i=0,k=0;i<BLOCK_SUM;i++){
-		printf("%d\t",i);
+		printf("\t\t%d\t",i);
 		for(j=0;j<PAGE_SIZE;j++){
 			printf("%c",actMem[k++]);
 		}
@@ -549,7 +551,7 @@ void do_print_auxMem()
 		do_error(ERROR_FILE_READ_FAILED);
 		exit(1);
 	}
-	printf("辅存:\n");
+	printf("***********************辅存***********************\n");
 	printf("页号\t内容\t\n");
 	for(i=0,k=0;i<PAGE_SUM;i++)
 	{
@@ -567,12 +569,12 @@ void do_print_info()
 {
 	unsigned int i, j, k;
 	char str[4];
-	printf("页号\t块号\t装入\t修改\t保护\t计数\t辅存\tPID\n");
+	printf("页号\t块号\t装入\t修改\t保护\t计数\tLastU\t辅存\tPID\n");	//LastU 最后使用时间
 	for (i = 0; i < PAGE_LEVEL1_SIZE; i++){
 		for(j = 0;j < PAGE_LEVEL2_SIZE; j++)
-			printf("%u\t%u\t%u\t%u\t%s\t%lu\t%lu\t%u\n", pageTable[i][j].pageNum, pageTable[i][j].blockNum, pageTable[i][j].filled, 
+			printf("%u\t%u\t%u\t%u\t%s\t%lu\t%lu\t%lu\t%u\n", pageTable[i][j].pageNum, pageTable[i][j].blockNum, pageTable[i][j].filled, 
 				pageTable[i][j].edited, get_proType_str(str, pageTable[i][j].proType), 
-				pageTable[i][j].count, pageTable[i][j].auxAddr,pageTable[i][j].pid);
+				pageTable[i][j].count, pageTable[i][j].execNo, pageTable[i][j].auxAddr,pageTable[i][j].pid);
 	}
 }
 
@@ -628,14 +630,6 @@ int main(int argc, char* argv[])
 	/* 在循环中模拟访存请求与处理过程 */
 	while (TRUE)
 	{
-		/*printf("按H将由手动输入访存请求,按其他键由程序自动生成请求...\n");
-		c = getchar();
-		if(c == 'h'|| c == 'H')
-			do_input_request();
-		else
-			do_request();
-		while (c != '\n')
-			c = getchar();*/
 		bzero(ptr_memAccReq,REQ_DATALEN);
 		if(cnt=read(fifo,ptr_memAccReq,REQ_DATALEN)<0){
 			printf("Read file failed!\n");

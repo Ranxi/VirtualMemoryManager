@@ -8,10 +8,12 @@
 #define REQUIRE_HAND
 #define PRINT_MEMORY
 //#define MULTIPRO
+
 /* 模拟辅存的文件路径 */
 #define AUXILIARY_MEMORY "a.txt"		//辅存空间
-/*FIFO FILE*/
+/* 进程间通信文件:FIFO FILE */
 #define FIFO_FILE "fifo"
+
 /* 页面大小（字节）*/
 #define PAGE_SIZE 4
 
@@ -25,9 +27,9 @@
 #define BLOCK_SUM (ACTUAL_MEMORY_SIZE / PAGE_SIZE)
 /* 二级页表表项数 */
 #define PAGE_LEVEL2_SIZE 16
-/*pageDir_Size*/
+/* 页目录大小 */
 #define PAGE_LEVEL1_SIZE (PAGE_SUM/PAGE_LEVEL2_SIZE)
-/*process number*/
+/* 进程数 */
 #define PROCESS_NUM		2
 
 /* 可读标识位 */
@@ -105,8 +107,11 @@ void do_response();
 /* 处理缺页中断 */
 void do_page_fault(Ptr_PageTableItem);
 
-/* LFU页面替换 */
+/* LFU页面替换算法 */
 void do_LFU(Ptr_PageTableItem);
+
+/* LRU页面替换算法 */
+void do_LRU(Ptr_PageTableItem);
 
 /* 装入页面 */
 void do_page_in(Ptr_PageTableItem, unsigned in);
