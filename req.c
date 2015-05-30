@@ -15,7 +15,7 @@ void do_request()
 	/*process number*/
 	req.pid = random() % PROCESS_NUM;
 	/* 随机产生请求类型 */
-	switch (1/*random() % 3*/)
+	switch (random() % 3)
 	{
 		case 0: //读请求
 		{
