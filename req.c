@@ -76,7 +76,7 @@ void do_input_request()
 			printf("请输入待写入的值:");
 			scanf("%d",&writeValue);
 			req.value = writeValue % 0xFFu;
-			printf("输入产生的请求：\n地址：%lu\t类型：写入\t值：%02X\tPID:%u\n", req.virAddr, req.value,pid);
+			printf("输入产生的请求：\n地址：%lu\t类型：写入\t值：%c\tPID:%u\n", req.virAddr, req.value,pid);
 			break;
 		}
 		case 2:

@@ -569,12 +569,10 @@ void do_print_info()
 {
 	unsigned int i, j, k;
 	char str[4];
-	printf("页号\t块号\t装入\t修改\t保护\t计数\tLastU\t辅存\tPID\n");	//LastU 最后使用时间
+	printf("页号\tPT1\tPT2\t块号\t装入\t修改\t保护\t计数\tLastU\t辅存\tPID\n");	//PT1:一级页号,PT2:二级页号,LastU 最后使用时间
 	for (i = 0; i < PAGE_LEVEL1_SIZE; i++){
 		for(j = 0;j < PAGE_LEVEL2_SIZE; j++)
-			printf("%u\t%u\t%u\t%u\t%s\t%lu\t%lu\t%lu\t%u\n", pageTable[i][j].pageNum, pageTable[i][j].blockNum, pageTable[i][j].filled, 
-				pageTable[i][j].edited, get_proType_str(str, pageTable[i][j].proType), 
-				pageTable[i][j].count, pageTable[i][j].execNo, pageTable[i][j].auxAddr,pageTable[i][j].pid);
+			printf("%u\t%u\t%u\t%u\t%u\t%u\t%s\t%lu\t%lu\t%lu\t%u\n", pageTable[i][j].pageNum,i,j, pageTable[i][j].blockNum, 				pageTable[i][j].filled,pageTable[i][j].edited, get_proType_str(str, pageTable[i][j].proType), 				pageTable[i][j].count, pageTable[i][j].execNo, pageTable[i][j].auxAddr,pageTable[i][j].pid);
 	}
 }
 
@@ -639,7 +637,6 @@ int main(int argc, char* argv[])
 		c = '\n';
 		do_response();
 		printf("按Y打印页表，按A键打印辅存，按P键打印实存,按其他键不打印...\n");
-		
 		while((c = getchar())!='\n'){
 			if (c  == 'y' || c == 'Y')
 				do_print_info();

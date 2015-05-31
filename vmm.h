@@ -7,7 +7,7 @@
 #undef DEBUG
 #define REQUIRE_HAND
 #define PRINT_MEMORY
-//#define MULTIPRO
+#define MULTIPRO
 
 /* 模拟辅存的文件路径 */
 #define AUXILIARY_MEMORY "a.txt"		//辅存空间
